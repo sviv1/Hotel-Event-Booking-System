@@ -2,25 +2,41 @@
 
 using namespace std;
 
+void readClientIDCounter();
+void saveClientIDCounter();
 
-
-//base class
-class client
-{
+// Base class
+class client {
 public:
-    //base class data members
-    static int c_id_count;
+    static int c_id_count;  // Static member to track client IDs
     int cost_cnt;
     char c_type;
 
-    Clien(){
-        cost_cnt=0;
+        struct RoomBooking {
+        int room_id;
+        int cost;
+    };
+    vector<RoomBooking> bookings;
+
+    client() {
+        cost_cnt = 0;
     }
 
-    //base class member functions
-    //using csv file to store & check the user data
-    //virtual function for polymorphism
-   virtual void check()
+        void addBooking(int room_id, int room_cost) {
+        bookings.push_back({room_id, room_cost});
+        cout << "Room booked successfully. Cost for this room: " << room_cost << endl;
+    }
+
+    int getTotalCost() {
+        int total = 0;
+        for (const auto& booking : bookings) {
+            total += booking.cost;
+        }
+        return total;
+    }
+
+
+       virtual void check()
 {
     // Searching if a client has his/her account
     fstream fin;
@@ -68,94 +84,114 @@ public:
     fin.close();  // Close the file
 }
 
-     // Virtual function for updating or adding new clients
-    virtual int update()
-    {
-      fstream fin, fout;
-fin.open("client.csv", ios::in);
 
-string target_phn;
-int count = 0;
 
-cout << "Enter the phone number of the client: ";
-cin >> target_phn;
+    virtual int update() {
+        fstream fin, fout;
+        fin.open("client.csv", ios::in);
 
-vector<string> row;
-string line, word;
 
-// Checking if the client already exists
-while (getline(fin, line)) {
-    row.clear();
-    stringstream s(line);
 
-    // Splitting the line into comma-separated values
-    while (getline(s, word, ',')) {
-        row.push_back(word);
-    }
+        string target_phn;
+        int count = 0;
 
-    if (row.size() > 2) {  // Ensure there are enough fields
-        string phn = row[2];  // Phone number field is at index 2
+        cout << "Enter the phone number of the client: ";
+        cin >> target_phn;
 
-        if (target_phn == phn) {
-            // Client exists, print the existing details
-            count = 1;
-            cout << "Client already exists. Details:\n";
-            cout << "Client ID: " << row[0] << "\n";
-            cout << "Name: " << row[1] << "\n";
-            cout << "Phone No: " << row[2] << "\n";
-            cout << "Address: " << row[3] << "\n";
-            cout << "NID: " << row[4] << "\n";
-            break;
+        vector<string> row;
+        string line, word;
+
+        // Checking if the client already exists
+        while (getline(fin, line)) {
+            row.clear();
+            stringstream s(line);
+
+            // Splitting the line into comma-separated values
+            while (getline(s, word, ',')) {
+                row.push_back(word);
+            }
+
+            if (row.size() > 2) {  // Ensure there are enough fields
+                string phn = row[2];  // Phone number field is at index 2
+
+                if (target_phn == phn) {
+                    // Client exists, print the existing details
+                    count = 1;
+                    cout << "Client already exists. Details:\n";
+                    cout << "Client ID: " << row[0] << "\n";
+                    cout << "Name: " << row[1] << "\n";
+                    cout << "Phone No: " << row[2] << "\n";
+                    cout << "Address: " << row[3] << "\n";
+                    cout << "NID: " << row[4] << "\n";
+                    cost_cnt = stoi(row[5]);  // Retain the previous cost for existing clients
+                    cout << "Current cost: " << cost_cnt << "\n";
+                    break;
+                }
+            }
         }
+
+        fin.close();
+
+        // If the client does not exist, add them to the file
+        if (count == 0) {
+            fout.open("client.csv", ios::out | ios::app);
+
+
+            readClientIDCounter();  // Read the last client ID from the file
+            int c_id = ++c_id_count;  // Auto-generate a new client ID
+            string c_name, c_address, c_nid;
+
+            // Getting the new client's details
+            cout << "New client detected. Generating new Client ID: " << c_id << endl;
+
+
+            cin.ignore();  // Clear the input buffer
+            cout << "Enter Client Name: ";
+            getline(cin, c_name);  // Use getline to allow spaces in names
+
+            cout << "Enter Client Address: ";
+            getline(cin, c_address);  // Use getline for address
+
+            cout << "Enter Client NID: ";
+            getline(cin, c_nid);  // Use getline for NID
+
+            // Writing the new client details to the CSV file
+            fout << c_id << "," << c_name << "," << target_phn << "," << c_address << "," << c_nid << "," << 0 << "\n";
+            fout.close();
+
+            saveClientIDCounter();  // Save the updated client ID count to the file
+
+            cout << "Client data saved successfully. Now you can type 3 to handle your bookings!\n";
+        }
+
+        return 0;  // Success
     }
-}
-
-fin.close();
-
-// If the client does not exist, add them to the file
-if (count == 0) {
-    fout.open("client.csv", ios::out | ios::app);
-
-    int c_id = ++c_id_count;  // Auto-generate a new client ID
-    string c_name, c_address, c_nid;
-
-    // Getting the new client's details
-    cout << "New client detected. Generating new Client ID: " << c_id << endl;
-
-    cin.ignore();  // Clear the input buffer
-    cout << "Enter Client Name: ";
-    getline(cin, c_name);  // Use getline to allow spaces in names
-
-    cout << "Enter Client Address: ";
-    getline(cin, c_address);  // Use getline for address
-
-    cout << "Enter Client NID: ";
-    getline(cin, c_nid);  // Use getline for NID
-
-    // Writing the new client details to the CSV file
-    fout << c_id << ","
-         << c_name << ","
-         << target_phn << ","
-         << c_address << ","
-         << c_nid << "\n";
-
-    fout.close();
-
-    cout << "Client data saved successfully.Now you can type 3 to Handle your Bookings!\n";
-}
-
-    }
-    /*
-    we can also get the informations using constructor
-    client(string c_name,string c_phone_no,string c_address,string c_nid,char c_type)
-    {
-        c_id_count++; c_id=c_id_count;
-        this->c_name=c_name; this->c_phone_no=c_phone_no; this->c_address=c_address; this->c_nid=c_nid; this->c_type=c_type;
-    }
-    */
 };
+// Initialize static member
+int client::c_id_count = 0;
 
-int client::c_id_count = 0;  // Define and initialize the static member variable
+
+// Function to read the current client ID count from a file
+void readClientIDCounter() {
+    ifstream infile("client_id_counter.txt");
+    if (infile.is_open()) {
+        infile >> client::c_id_count;
+        infile.close();
+    } else {
+        // If the file doesn't exist, assume first client
+        client::c_id_count = 0;
+    }
+}
+
+// Function to save the current client ID count to a file
+void saveClientIDCounter() {
+    ofstream outfile("client_id_counter.txt");
+    if (outfile.is_open()) {
+        outfile << client::c_id_count;
+        outfile.close();
+    }
+}
+
 
 
 //derived class of the base class client
@@ -227,7 +263,7 @@ int update()
     int room_id;
     string room_type, room_book;
     bool room_found = false;
-    cost_cnt=0;
+    int room_cost=0;
     // Reading from the file and updating it with the booked room
     while (inf >> room_id >> room_type >> room_book) // Avoid using .eof() as a condition
     {
@@ -236,16 +272,20 @@ int update()
             room_found = true;
 
             // Calculating the cost based on the room type
-            if (room_type == "standard")
-                cost_cnt += 2000;
-            else if (room_type == "suite")
-                cost_cnt += 5000;
-            else if (room_type == "deluxe")
-                cost_cnt += 10000;
+            if (room_type == "Standard")
+                room_cost = 2000;
+            else if (room_type == "Suite")
+                room_cost = 5000;
+            else if (room_type == "Deluxe")
+                room_cost = 10000;
 
             // Informing the user about the booking
             cout << "Room " << room_id << " (" << room_type << ") is being booked." << endl;
-
+            cout << "Cost before update: " << cost_cnt << endl;
+            cout<<"Room Cost is:"<<room_cost<<endl;
+            cost_cnt += room_cost;
+           cout << "Cost after update: " << cost_cnt << endl;
+            addBooking(room_id, room_cost);
             // Updating the room with client_id to indicate booking
             outf << room_id << " " << room_type << " " << client_id << endl;
         }
@@ -268,31 +308,40 @@ int update()
     // Deleting the previous file and renaming the new file to replace the old one
     remove("hotelroom.txt");
     rename("hotelroom1.txt", "hotelroom.txt");
-
+    saveClientCostToCSV(c_id, cost_cnt);
     // Handling the payment
-
-int payment;
-while (true) {
-    cout << "Please enter the payment (Total cost: " << cost_cnt << "): ";
-    cin >> payment;
-
-    if (payment > cost_cnt) {
-        cout << "Payment cannot exceed the total cost. Please enter the correct amount." << endl;
-    } else {
-        // If the payment is valid, break the loop
-        break;
-    }
-}
-
-// Final message after successful booking
-if (payment == cost_cnt) {
-    cout << "Payment successful! Your room is booked." << endl;
-}
-
-
-    // Returning the cost of the client
     return cost_cnt;
+
 }
+
+void saveClientCostToCSV(int client_id, int cost) {
+    ifstream fin("client.csv");
+    ofstream fout("client_temp.csv");
+    string line;
+
+    while (getline(fin, line)) {
+        stringstream s(line);
+        string item;
+        vector<string> row;
+
+        while (getline(s, item, ',')) {
+            row.push_back(item);
+        }
+
+        if (row.size() > 0 && stoi(row[0]) == client_id) { // Update the cost
+            row[5] = to_string(cost);
+        }
+
+        fout << row[0] << "," << row[1] << "," << row[2] << "," << row[3] << "," << row[4] << "," << row[5] << "\n";
+    }
+
+    fin.close();
+    fout.close();
+
+    remove("client.csv");
+    rename("client_temp.csv", "client.csv");
+}
+
 
 
 
@@ -330,8 +379,14 @@ if (payment == cost_cnt) {
         if (!checked_out) {
             cout << "No room booked under this client ID." << endl;
         } else {
+              int totalCost = getTotalCost();
+             cout << "Total Bill:" << totalCost << endl;
+    // Clear bookings for the client after checkout
+            bookings.clear();
+            cout<<"Thanks for visiting us!.Have a Nice Day"<<endl;
             remove("hotelroom.txt");
             rename("hotelroom1.txt", "hotelroom.txt");
+
         }
     }
 
@@ -342,6 +397,7 @@ if (payment == cost_cnt) {
     //virtual function for polymorphism in derived class cost
     virtual void display_cost(){};
 };
+
 
 
 
@@ -423,8 +479,10 @@ public:
         outf.close();
 
         cout << "Hall booked successfully for the selected date range!" << endl;
+
         return cost_cnt;
     }
+
 
     virtual void display_cost() {};
 };
@@ -530,41 +588,49 @@ public:
 
 class cost : public client_conventionhall, public client_hotelroom, public client_restaurant {
 public:
-    // Check and update function for creating polymorphism
-    void check() {
-        client_conventionhall::check();
-        client_hotelroom::check();
-        client_restaurant::check();
-    }
+    int cost_cnt; // Ensure this is declared to keep track of total costs
 
-    int update() {
-        int total_cost = 0;
-        total_cost += client_conventionhall::update();
-        total_cost += client_hotelroom::update();
-        total_cost += client_restaurant::update();
-        return total_cost;
-    }
 
-    // Displaying the total cost of a client
+    void check() {}
+    int update() {return 0;}
+
+    // Display the total cost of a client and handle payments
     void display_cost(int cost) {
-        cout << endl << "Total cost: " << cost << endl;
-        int paid;
-        cout << "Paid money: ";
-        cin >> paid;
-        if (paid >= cost) {
-            cout << "Receivable change: " << paid - cost << endl;
-        } else {
-            cout << "Insufficient payment. Please pay the remaining: " << cost - paid << endl;
+        int payment, paid = 0; // Initialize paid to track total payments
+
+        while (true) {
+            cout << "Total cost: " << cost << ". Please enter the payment: ";
+            cin >> payment;
+
+            // Input validation
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter a valid numeric value.\n";
+                continue;
+            }
+
+            // Check if payment exceeds total cost
+            if (payment > cost - paid) {
+                cout << "Payment exceeds the remaining amount. Please enter a valid amount.\n";
+                continue;
+            }
+
+            // Accumulate payments
+            paid += payment;
+
+            // Check if full payment has been made
+            if (paid == cost) {
+                cout << "Full payment of " << cost << " received. Thank you!\n";
+                break;
+            } else {
+                cout << "Partial payment made. Remaining balance: " << cost - paid << "\n";
+            }
         }
     }
-
-    // Operator overloading to compute the cost (addition instead of subtraction)
-    cost operator + (cost c) {
-        cost c3;
-        c3.cost_cnt = this->cost_cnt + c.cost_cnt;
-        return c3;
-    }
 };
+
+
 
 
 void handleBookings(client *bptr, cost &c2, client_hotelroom &h1, client_conventionhall &ch1, client_restaurant &r1) {
@@ -596,9 +662,9 @@ void handleBookings(client *bptr, cost &c2, client_hotelroom &h1, client_convent
 
                 int totalCost = 0;  // Reset total cost for this booking
                 for (int i = 0; i < rooms; ++i) {
-                    totalCost += bptr->update();  // Accumulate cost for each room
+                    totalCost = bptr->update();  // Accumulate cost for each room
                 }
-                c2.display_cost(totalCost);  // Display total cost after all bookings
+                // c2.display_cost(totalCost);  // Display total cost after all bookings
             }
         } else if (t == 2) {
             bptr = &ch1;
@@ -607,7 +673,7 @@ void handleBookings(client *bptr, cost &c2, client_hotelroom &h1, client_convent
             cin >> t;
             if (t) {
                 int cost = bptr->update();  // Assuming update() returns the cost for booking
-                c2.display_cost(cost);
+                //c2.display_cost(cost);
             }
         } else if (t == 3) {
             bptr = &r1;
@@ -616,10 +682,19 @@ void handleBookings(client *bptr, cost &c2, client_hotelroom &h1, client_convent
             cin >> t;
             if (t) {
                 int cost = bptr->update();  // Assuming update() returns the cost for booking
-                c2.display_cost(cost);
+               // c2.display_cost(cost);
             }
         } else if (t == 4) {
-            h1.checkout();  // Assuming this handles checkouts correctly
+
+               // Display the accumulated cost before checkout
+            cout << "Total cost before checkout: " << bptr->cost_cnt << endl;
+            // Call the display_cost method to handle payment
+            c2.display_cost(bptr->cost_cnt); // Pass the cost for payment processing
+            h1.checkout();  // Handle the checkout process
+
+
+
+
         } else if (t == 0) {
             break;
         } else {
@@ -662,6 +737,7 @@ int main() {
             bptr = &c1;
             bptr->update();
         } else if (t == 3) {
+
             handleBookings(bptr, c2, h1, ch1, r1);
         } else if (t == 0) {
             cout << "Exiting the program..." << endl;
