@@ -47,5 +47,4 @@
 47 Deluxe NULL
 48 Suite NULL
 49 Standard NULL
-50 Deluxe NULL
-50 Deluxe NULL
+50 Deluxe 1
