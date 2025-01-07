@@ -21,6 +21,7 @@ public:
     client() {
         cost_cnt = 0;
     }
+    virtual ~client() {}
 
         void addBooking(int room_id, int room_cost) {
         bookings.push_back({room_id, room_cost});
@@ -588,18 +589,21 @@ public:
 
 class cost : public client_conventionhall, public client_hotelroom, public client_restaurant {
 public:
-    int cost_cnt; // Ensure this is declared to keep track of total costs
-
+    int cost_cnt=0; // Ensure this is declared to keep track of total costs
+    int update(){
+    return 0;}
 
     void check() {}
-    int update() {return 0;}
+    void update_cost(int x) {
+        cost_cnt+=x;
+    }
 
     // Display the total cost of a client and handle payments
-    void display_cost(int cost) {
+    void display_cost() {
         int payment, paid = 0; // Initialize paid to track total payments
 
         while (true) {
-            cout << "Total cost: " << cost << ". Please enter the payment: ";
+            cout << "Total cost: " << cost_cnt << ". Please enter the payment: ";
             cin >> payment;
 
             // Input validation
@@ -611,7 +615,7 @@ public:
             }
 
             // Check if payment exceeds total cost
-            if (payment > cost - paid) {
+            if (payment > cost_cnt - paid) {
                 cout << "Payment exceeds the remaining amount. Please enter a valid amount.\n";
                 continue;
             }
@@ -620,11 +624,11 @@ public:
             paid += payment;
 
             // Check if full payment has been made
-            if (paid == cost) {
-                cout << "Full payment of " << cost << " received. Thank you!\n";
+            if (paid == cost_cnt) {
+                cout << "Full payment of " << cost_cnt << " received. Thank you!\n";
                 break;
             } else {
-                cout << "Partial payment made. Remaining balance: " << cost - paid << "\n";
+                cout << "Partial payment made. Remaining balance: " << cost_cnt - paid << "\n";
             }
         }
     }
@@ -664,7 +668,7 @@ void handleBookings(client *bptr, cost &c2, client_hotelroom &h1, client_convent
                 for (int i = 0; i < rooms; ++i) {
                     totalCost = bptr->update();  // Accumulate cost for each room
                 }
-                // c2.display_cost(totalCost);  // Display total cost after all bookings
+                 c2.update_cost(totalCost);  // Display total cost after all bookings
             }
         } else if (t == 2) {
             bptr = &ch1;
@@ -673,7 +677,7 @@ void handleBookings(client *bptr, cost &c2, client_hotelroom &h1, client_convent
             cin >> t;
             if (t) {
                 int cost = bptr->update();  // Assuming update() returns the cost for booking
-                //c2.display_cost(cost);
+                c2.update_cost(cost);
             }
         } else if (t == 3) {
             bptr = &r1;
@@ -682,14 +686,14 @@ void handleBookings(client *bptr, cost &c2, client_hotelroom &h1, client_convent
             cin >> t;
             if (t) {
                 int cost = bptr->update();  // Assuming update() returns the cost for booking
-               // c2.display_cost(cost);
+                c2.update_cost(cost);
             }
         } else if (t == 4) {
 
                // Display the accumulated cost before checkout
-            cout << "Total cost before checkout: " << bptr->cost_cnt << endl;
+            cout << "Total cost before checkout: " << c2.display_cost() << endl;
             // Call the display_cost method to handle payment
-            c2.display_cost(bptr->cost_cnt); // Pass the cost for payment processing
+
             h1.checkout();  // Handle the checkout process
 
 
@@ -749,7 +753,6 @@ int main() {
 
     return 0;
 }
-
 
 
 
